@@ -97,7 +97,8 @@ def main():
     #get_all("organizadores", ["codorganizador", "nome"], None, "codorganizador > 5", ["codorganizador", "DESC"])
 
     # Teste SELECT com JOIN, where e order by
-    '''get_all(
+    '''
+    get_all(
             "torneio", ["torneio.nome", "regiao.localizacao", "tier.nivel", "regiao.localizacao", "organizadores.nome"],
             [("tier", "tier.codtier", "torneio.codtorneio"),
              ("regiao", "regiao.codRegiao", "torneio.codRegiao"),
@@ -105,11 +106,17 @@ def main():
              ("organizadores", "torneio_organizadores.codorganizadorr", "organizadores.codorganizador")
              ],
             "torneio.nome = 'Champions 2025'",
-            ["organizadores.nome", "DESC"])'''
-    
+            ["organizadores.nome", "DESC"])
+    '''
 
 
     #insert("organizadores", ["codorganizador", "nome"], "")
+
+
+regexData = r"^(0[1-9]|1[0-2]) ([0-2][0-9]|3[01]) (\d{4})$"
+
+def criar_partidas():
+    return
 
 if __name__ == "__main__":
     main()
