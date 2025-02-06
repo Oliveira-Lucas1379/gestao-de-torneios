@@ -7,16 +7,16 @@ def main():
 
     # CREATE
     """
-    Insere um novo registro na tabela especificada.
+    Insere novos registros na tabela especificada.
     :param table: O nome da tabela onde os dados serão inseridos.
     :param columns: Uma lista com os nomes das colunas onde os valores serão inseridos.
-    :param values: Uma lista com os valores correspondentes às colunas.
+    :param values: Uma lista de tuplas com os valores correspondentes às colunas.
     """
     def insert(table, columns, values):
-        placeholders = ', '.join(['%s'] * len(values))
+        placeholders = ', '.join(['%s'] * len(columns))
         columns_str = ', '.join(columns)
         cmd_insert = f"INSERT INTO {table} ({columns_str}) VALUES ({placeholders})"
-        cursor.execute(cmd_insert, values)
+        cursor.executemany(cmd_insert, values)
         connection.commit()
         print(f"Dados inseridos com sucesso na tabela {table}")
 
@@ -25,11 +25,25 @@ def main():
     Recupera todos os registros de uma tabela e colunas especificadas.
     :param table: O nome da tabela a ser consultada.
     :param columns: Uma lista com os nomes das colunas a serem recuperadas.
+    :param join_clause: Uma lista de tuplas onde a tupla é (tabela, associacao, associacao)
+    :param condition: Possui a condição para ser utilizado no WHERE
+    :param order_by: Lista de 2 posições, posição 1 = coluna, posição 2 = ASC ou DESC
     :return: Uma lista de tuplas contendo os dados consultados.
     """
-    def get_all(table, columns):
+    def get_all(table, columns, join_clause=None, condition=None, order_by=None):
         columns_str = ', '.join(columns)
         cmd_get = f"SELECT {columns_str} FROM {table}"
+
+        if join_clause:
+            for join_tuple in join_clause:
+                cmd_get += f" JOIN {join_tuple[0]} ON {join_tuple[1]} = {join_tuple[2]}"
+
+        if condition:
+            cmd_get += f" WHERE {condition}"
+
+        if order_by:
+            cmd_get += f" ORDER BY {order_by[0]} {order_by[1]}"
+
         cursor.execute(cmd_get)
         results = cursor.fetchall()
         for row in results:
@@ -67,13 +81,35 @@ def main():
         print(f"Dados deletados da tabela {table}")
 
     # Teste de usos
-    #insert("jogadores", ["bid", "nome", "time", "posicao", "data_nascimento"], ["EFGH", "Carlos Silva", "Flamengo", "Zagueiro", "15/09/1998"])
-    insert("patrocinadores", ["identificador", "nome"], [20, "Guaravita"])
-    #get_all("patrocinadores", ["nome"])
-    #get_all("jogadores", ["time", "posicao", "nome"])
-    #update("jogadores", {"time": "São Paulo", "posicao": "Zagueiro"}, {"bid" : "EFGH"})
-    #delete("jogadores", {"bid": "EFGH"})
 
+    #insert("organizadores", ["codorganizador", "nome"], [(30, "Ferreora")])
+
+    # Teste SELECT *
+    #get_all("organizadores", ["*"], None, None, None)
+
+    # Teste SELECT somente com condition
+    #get_all("organizadores", ["codorganizador", "nome"], None, "codorganizador = 10", None)
+
+    # Teste SELECT somente com ORDER BY
+    #get_all("organizadores", ["codorganizador", "nome"], None, None, ["codorganizador", "DESC"])
+
+    # Teste SELECT com WHERE e ORDER BY
+    #get_all("organizadores", ["codorganizador", "nome"], None, "codorganizador > 5", ["codorganizador", "DESC"])
+
+    # Teste SELECT com JOIN, where e order by
+    '''get_all(
+            "torneio", ["torneio.nome", "regiao.localizacao", "tier.nivel", "regiao.localizacao", "organizadores.nome"],
+            [("tier", "tier.codtier", "torneio.codtorneio"),
+             ("regiao", "regiao.codRegiao", "torneio.codRegiao"),
+             ("torneio_organizadores", "torneio_organizadores.codtorneio", "torneio.codtorneio"),
+             ("organizadores", "torneio_organizadores.codorganizadorr", "organizadores.codorganizador")
+             ],
+            "torneio.nome = 'Champions 2025'",
+            ["organizadores.nome", "DESC"])'''
+    
+
+
+    #insert("organizadores", ["codorganizador", "nome"], "")
 
 if __name__ == "__main__":
     main()
