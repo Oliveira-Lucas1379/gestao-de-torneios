@@ -2,49 +2,49 @@ import controller
 import datetime
 import re
 
-sumario = 'Digite o número correspondente para fazer a ação desejada:\n1 - Criar Torneio \n2 - Ver Torneios\n9 - Finalizar Gestor de Torneios\nDigite: '
+sumario = 'Digite o número correspondente para fazer a ação desejada:\n1 - Criar Torneio \n2 - Ver Torneio\n9 - Finalizar Gestor de Torneios\nDigite: '
+
 
 def selecao_inicial(indice):
-    try:   
-        match indice:
-            case 1:
-                return cria_torneio()
-            case 2:
-                return lista_torneios()
-            case 9:
-                return print('Obrigado por utilizar o gestor de torneios! Até a próxima!')
-            case 'retorno':
-                selecao_inicial(int(input(f'\nDe volta a seleção incial!\n{sumario}')))
-            case _:
-                return selecao_inicial(int(input(f'Valor {indice} inválido\n{sumario}')))
-    except:
-        return #tratar exeção
-        
+    match indice:
+        case 1:
+            return cria_torneio()
+        case 2:
+            return ver_torneio()
+        case 9:
+            return print('Obrigado por utilizar o gestor de torneios! Até a próxima!')
+        case 'retorno':
+            selecao_inicial(int(input(f'\nDe volta a seleção incial!\n{sumario}')))
+        case _:
+            return init(True)
 
-def lista_torneios():
-    def altera_torneio():
+def ver_torneio():
+    def altera_torneio(cod_torneio):
         return
 
-    def deleta_torneio():
+    def deleta_torneio(cod_torneio):
         return
 
     sumario_torneio = 'Digite o número correspondente para fazer a ação desejada:\n1 - Ver Partidas\n2 - Alterar Torneio \n3 - Excluir Torneio\n9 - Finalizar Gestor de Torneios\nDigite: '
 
+    print(f'\nEstes sãos os torneios já cadastrados:\n{lista_torneios()}')
     def selecao_torneio(indice):
         match indice:
             case 1:
-                return print(lista_partidas(input('Digite o código do torneio: ')))
+                return print(f'\nEstas são as partidas do torneio:\n{lista_partidas(input('Digite o código do torneio: '))}')
             case 2:
                 return altera_torneio(input('Digite o código do torneio: '))
             case 3:
-                return deleta_torneio()
+                return deleta_torneio(input('Digite o código do torneio: '))
             case 9:
                 return print('Obrigado por utilizar o gestor de torneios! Até a próxima!')
             case _:
-                return selecao_torneio(int(input(f'Valor {indice} inválido\n{sumario_torneio}')))
-            
-    
-    selecao_torneio(int(input(sumario_torneio)))
+                return selecao_torneio(int(input(f'Valor {indice} inválido\n{sumario_torneio}')))                
+    try:
+        selecao_torneio(int(input(sumario_torneio)))
+    except:
+        selecao_torneio(int(input(f'\nValor inválido!\n{sumario_torneio}')))
+
     return selecao_inicial('retorno')
 
 def cria_torneio():
@@ -69,7 +69,6 @@ def cria_torneio():
 
     try:
         nome = input('\nVamos criar um torneio! Para isso precisamos de algumas informações.\nQual o nome do seu torneio?\nDigite: ')
-        #insert('torneios', 'nome', nome)
         
         contador = 0
         dataInvalida = True
@@ -126,54 +125,66 @@ def cria_torneio():
                 raise print('Times inválidos! Limite máximo de tentativas excedido')
           validaTimes(input('\nVocê cometeu um erro ao digitar!\n'+inputTimes))  
           contador += 1
-
+        
+        controller.criar_partidas()
+        #insert('torneios', 'nome', nome)
         #insert('torneios', 'data_inicial', data_inicial)
         #insert('torneios', 'data_final', data_final)
         #insert('torneios', 'organizador', organizador)
         #insert('torneios', 'patrocinador', patrocinador)
         #insert('torneios', 'data_final', data_final)
         #insert('torneios', 'tier', calcula_tier())
-
-        controller.criar_partidas()
-         
+        
     except:
         tentar_novamente(input('Ocorreu um erro ao criar o seu torneio, deseja tentar novamente?\nDigite S/N: '))
         return
         
-    print('Torneio criado com sucesso!')
+    print('Torneio {nome} criado com sucesso!')
     
     return selecao_inicial('retorno')
 
 
 
+def lista_torneios():
+    global torneios
+    torneios = ['teste']
+    return torneios
+
 def lista_partidas(cod_torneio):
-    return 'lista de partidas'
+    global partidas
+    partidas = ['teste']
+    return partidas
 
 def lista_organizadores():
     global organizadores
     organizadores = ['teste']
-    return 'lista de organizadores'
+    return organizadores
 
 def lista_patrocinadores():
     global patrocinadores
     patrocinadores = ['teste']
-    return 'lista de patrocinadores'
+    return patrocinadores
 
 def lista_regioes():
     global regioes
     regioes = ['teste']
-    return 'lista de regioes'
+    return regioes
 
 def lista_times():
     global times
     times = [1,2,3]
-    return 'lista de times'
+    return times
 
-def listar_partidas():
-    global partidas
-    partidas = ['teste']
-    return
+def init(erro):
+    if erro:
+        try:
+            selecao_inicial(int(input(f'\nValor inválido!\n{sumario}')))
+        except:
+            selecao_inicial(int(input(f'\nValor inválido!\n{sumario}')))
+    else:
+        try:
+            selecao_inicial(int(input(f'Seja bem vindo ao gestor de torneios!\n{sumario}')))
+        except:
+            selecao_inicial(int(input(f'\nValor inválido!\n{sumario}')))
 
-
-selecao_inicial(int(input(f'Seja bem vindo ao gestor de torneios!\n{sumario}')))
-
+init(False)
