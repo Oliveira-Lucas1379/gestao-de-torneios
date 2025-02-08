@@ -31,7 +31,7 @@ def ver_torneio():
     def selecao_torneio(indice):
         match indice:
             case 1:
-                return print(f'\nEstas são as partidas do torneio:\n{lista_partidas(input('Digite o código do torneio: '))}')
+                return print(f'\nEstas são as partidas do torneio:\n{lista_partidas(input("Digite o código do torneio: "))}')
             case 2:
                 return altera_torneio(input('Digite o código do torneio: '))
             case 3:
@@ -79,6 +79,7 @@ def cria_torneio():
             data_inicial = input('\nEm que data ele começa?\nDigite a data conforme o exemplo (01 01 2025): ')
             data_final = input('\nEm que data ele termina?\nDigite a data conforme o exemplo (01 01 2025): ')
             
+
             if re.match(controller.regexData, data_inicial):
                 if re.match(controller.regexData, data_final):
                     dataInvalida = False
@@ -91,31 +92,43 @@ def cria_torneio():
         contador = 0
         print(lista_organizadores())
         organizador = ''
-        while organizador not in organizadores:
+        while True:
             if contador >= 3:
                 raise print('Organizador inválido! Limite máximo de tentativas excedido')
-            organizador = input('\nQual o organizador?\nDigite apenas o código: ')
+            organizador = int(input('\nQual o organizador?\nDigite apenas o código: '))
             contador += 1
+            if any(tupla[0] == organizador for tupla in organizadores):
+                break
         
             
         contador = 0
         patrocinador = ''
         print(lista_patrocinadores())
-        while patrocinador not in patrocinadores:
+        existe = False
+        while not existe:
             if contador >= 3:
                 raise print('Patrocinador Inválido! Limite máximo de tentativas excedido')
             patrocinador = input('\nPossui algum patrocinador?\nDigite os seus códigos separados por "/"\nExemplo: 01/02/03\nCaso não possua nenhum patrocinador, apenas deixe em branco\nDigite: ')
+            patrocinadorCod = patrocinador.split("/")
             contador += 1
+            existe = True
+            for patrocinador in patrocinadorCod:
+                if not any(tupla[0] == patrocinador for tupla in patrocinadores):
+                    existe = False
+                    break
+
         
         contador = 0
         regiao = ''
         print(lista_regioes())
-        while regiao not in regioes:
+        while True:
             if contador >= 3:
                 raise print('Região invália! Limite máximo de tentativas excedido')
 
             regiao = input('\nQual a região?\nDigite apenas o código: ')
-            contador += 1      
+            contador += 1   
+            if any(tupla[0] == regiao for tupla in regioes):
+                break   
 
         contador = 0
         inputTimes = '\nQuais são os times?\nDigite os seus códigos separados por "/"\nExemplo: 01/02/03\nDigite: '
@@ -157,23 +170,31 @@ def lista_partidas(cod_torneio):
 
 def lista_organizadores():
     global organizadores
-    organizadores = ['teste']
-    return organizadores
+    viewOrganizadores = f"\n\nOrganizadores: \n Codigo    |    NOME\n"
+    organizadores = controller.get_all("organizadores", ["*"])
+    viewOrganizadores += "\n".join(f" {o[0]}    -    {o[1]}" for o in organizadores) + "\n"
+    return viewOrganizadores
 
 def lista_patrocinadores():
     global patrocinadores
-    patrocinadores = ['teste']
-    return patrocinadores
+    patrocinadores = controller.get_all("patrocinadores", ["*"])
+    viewPatrocinadores = f"\n\Patrocinadores: \n CODIGO    |        NOME         |        ORIGEM      \n"
+    viewPatrocinadores += "\n".join(f" {p[0]}     -     {p[1]} -    {p[2]}" for p in patrocinadores) + "\n"
+    return viewPatrocinadores
 
 def lista_regioes():
     global regioes
-    regioes = ['teste']
-    return regioes
+    regioes = controller.get_all("regiao", ["*"])
+    viewRegioes = f"\n\nRegioes: \n CODIGO   |        NOME         |          LOCALIZACAO     \n"
+    viewRegioes += "\n".join(f"{r[0]}    -      {r[1]}       -        {r[2]}" for r in regioes)
+    return viewRegioes
 
 def lista_times():
     global times
-    times = [1,2,3]
-    return times
+    times = controller.get_all("times", ["codtime", "nome"])
+    viewTimes = f"\n\Times: \n CODIGO   |        NOME\n"
+    viewTimes += "\n".join(f"{t[0]}    -      {t[1]}" for t in times)
+    return viewTimes
 
 def init(erro):
     if erro:
@@ -187,4 +208,5 @@ def init(erro):
         except:
             selecao_inicial(int(input(f'\nValor inválido!\n{sumario}')))
 
+print(lista_organizadores())
 init(False)
