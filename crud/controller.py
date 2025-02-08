@@ -80,9 +80,10 @@ def delete(table, condition):
     print(f"Dados deletados da tabela {table}")
 
 
-regexData = r"^(0[1-9]|1[0-2]) ([0-2][0-9]|3[01]) (\d{4})$"
+regexData = r"^(0[1-9]|[12][0-9]|3[01])/(0[1-9]|1[0-2])/\d{4}$"
 
-def criar_partidas():
+def criar_partidas(cod_torneio):
+    
     return
 
 if __name__ == "__main__":
