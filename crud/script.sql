@@ -18,13 +18,7 @@ CREATE TABLE Regiao (
 
 CREATE TABLE Tier (
     CodTier SERIAL PRIMARY KEY,
-    Nivel VARCHAR(50) NOT NULL
-);
-
-CREATE TABLE Tecnico (
-    ID_Tecnico SERIAL PRIMARY KEY,
-    Nome VARCHAR(255) NOT NULL,
-    Tipo VARCHAR(100) NOT NULL
+    Divisao VARCHAR(50) NOT NULL
 );
 
 CREATE TABLE Times (
@@ -33,53 +27,85 @@ CREATE TABLE Times (
     Logo BYTEA
 );
 
+CREATE TABLE Tecnico (
+    ID_Tecnico SERIAL PRIMARY KEY,
+    Nome VARCHAR(255) NOT NULL,
+    Funcao VARCHAR(100) NOT NULL,
+    CodTime INT,
+    FOREIGN KEY (CodTime) REFERENCES Times(CodTime)
+);
+
 CREATE TABLE Jogadores (
     ID_Jogador SERIAL PRIMARY KEY,
     Nome VARCHAR(255) NOT NULL,
     Funcao VARCHAR(100) NOT NULL,
-    CodTime INT REFERENCES Times(CodTime)
+    CodTime INT,
+    FOREIGN KEY (CodTime) REFERENCES Times(CodTime)
 );
 
 CREATE TABLE Torneio (
     CodTorneio INT PRIMARY KEY,
     Nome VARCHAR(255) NOT NULL,
-    Data DATE NOT NULL,
-    CodOrganizador INT REFERENCES Organizadores(CodOrganizador),
-    CodTier INT REFERENCES Tier(CodTier)
+    Data DATE,
+    CodRegiao INT,
+    CodTier INT,
+    FOREIGN KEY (CodRegiao) REFERENCES Regiao(CodRegiao),
+    FOREIGN KEY (CodTier) REFERENCES Tier(CodTier)
 );
 
 CREATE TABLE Partidas (
     CodPartida SERIAL PRIMARY KEY,
     Data DATE NOT NULL,
-    CodTorneio INT REFERENCES Torneio(CodTorneio),
-    CodTimeVencedor INT REFERENCES Times(CodTime) NULL,
-    CodTimePerdedor INT REFERENCES Times(CodTime) NULL,
-    EstadoPartida VARCHAR(50) CHECK (EstadoPartida IN ('Concluída', 'Em Andamento', 'Agendada'))
+    CodTorneio INT,
+    Resultados VARCHAR(100),
+    FOREIGN KEY (CodTorneio) REFERENCES Torneio(CodTorneio),
+    FOREIGN KEY (Resultados) REFERENCES Resultados(Resultado)
 );
 
+CREATE TABLE Resultados (
+    Resultado VARCHAR(100) PRIMARY KEY,
+    CodTimeVencedor INT,
+    CodTimePerdedor INT,
+    FOREIGN KEY (CodTimeVencedor) REFERENCES Times(CodTime),
+    FOREIGN KEY (CodTimePerdedor) REFERENCES Times(CodTime)
+)
+
 CREATE TABLE Classificacoes (
-    CodClassificacao SERIAL PRIMARY KEY,
-    Classificacao INT NOT NULL,
-    Premiacao DECIMAL(10,2),
-    CodTime INT REFERENCES Times(CodTime),
-    CodTorneio INT REFERENCES Torneio(CodTorneio)
+    id SERIAL PRIMARY KEY,
+    Colocacao INT,
+    CodTime INT,
+    CodTorneio INT,
+    FOREIGN KEY (Colocacao) REFERENCES Premiacao(Colocacao),
+    FOREIGN KEY (CodTime) REFERENCES Times(CodTime),
+    FOREIGN KEY (CodTorneio)  REFERENCES Torneio(CodTorneio)
 );
+
+CREATE TABLE Premiacao (
+    Colocacao SERIAL PRIMARY KEY,
+    ValorPremiacao DECIMAL(10,2)
+)
 
 -- Tabelas de relacionamento
 CREATE TABLE Torneio_Patrocinador (
-    CodTorneio INT REFERENCES Torneio(CodTorneio),
-    CodPatrocinador INT REFERENCES Patrocinadores(CodPatrocinador),
-    PRIMARY KEY (CodTorneio, CodPatrocinador)
+    CodTorneio INT,
+    CodPatrocinador INT,
+    PRIMARY KEY (CodTorneio, CodPatrocinador),
+    FOREIGN KEY (CodTorneio) REFERENCES Torneio(CodTorneio),
+    FOREIGN KEY (CodPatrocinador) REFERENCES Patrocinadores(CodPatrocinador)
 );
 
-CREATE TABLE Torneio_Regiao (
-    CodTorneio INT REFERENCES Torneio(CodTorneio),
-    CodRegiao INT REFERENCES Regiao(CodRegiao),
-    PRIMARY KEY (CodTorneio, CodRegiao)
+CREATE TABLE Torneio_Organizador (
+    CodTorneio INT,
+    CodOrganizador INT,
+    PRIMARY KEY (CodTorneio, CodOrganizador),
+    FOREIGN KEY (CodTorneio) REFERENCES Torneio(CodTorneio),
+    FOREIGN KEY (CodOrganizador) REFERENCES Organizadores(CodOrganizador)
 );
 
-CREATE TABLE Tecnico_Time (
-    ID_Tecnico INT REFERENCES Tecnico(ID_Tecnico),
-    CodTime INT REFERENCES Times(CodTime),
-    PRIMARY KEY (ID_Tecnico, CodTime)
+CREATE TABLE Times_Partidas (
+    CodPartida INT,
+    CodTime INT,
+    PRIMARY KEY (CodPartida, CodTime),
+    FOREIGN KEY (CodPartida) REFERENCES Partidas(CodPartida),
+    FOREIGN KEY (CodTime) REFERENCES Times(CodTime)
 );
