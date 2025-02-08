@@ -53,22 +53,28 @@ CREATE TABLE Torneio (
     FOREIGN KEY (CodTier) REFERENCES Tier(CodTier)
 );
 
-CREATE TABLE Partidas (
-    CodPartida SERIAL PRIMARY KEY,
-    Data DATE NOT NULL,
-    CodTorneio INT,
-    Resultados VARCHAR(100),
-    FOREIGN KEY (CodTorneio) REFERENCES Torneio(CodTorneio),
-    FOREIGN KEY (Resultados) REFERENCES Resultados(Resultado)
-);
-
 CREATE TABLE Resultados (
-    Resultado VARCHAR(100) PRIMARY KEY,
+    id SERIAL PRIMARY KEY,
+    Resultado VARCHAR(50),
     CodTimeVencedor INT,
     CodTimePerdedor INT,
     FOREIGN KEY (CodTimeVencedor) REFERENCES Times(CodTime),
     FOREIGN KEY (CodTimePerdedor) REFERENCES Times(CodTime)
-)
+);
+
+CREATE TABLE Partidas (
+    CodPartida SERIAL PRIMARY KEY,
+    Data DATE NOT NULL,
+    CodTorneio INT,
+    idResultado INT,
+    FOREIGN KEY (CodTorneio) REFERENCES Torneio(CodTorneio),
+    FOREIGN KEY (idResultado) REFERENCES Resultados(id)
+);
+
+CREATE TABLE Premiacao (
+    Colocacao SERIAL PRIMARY KEY,
+    ValorPremiacao DECIMAL(10,2)
+);
 
 CREATE TABLE Classificacoes (
     id SERIAL PRIMARY KEY,
@@ -79,11 +85,6 @@ CREATE TABLE Classificacoes (
     FOREIGN KEY (CodTime) REFERENCES Times(CodTime),
     FOREIGN KEY (CodTorneio)  REFERENCES Torneio(CodTorneio)
 );
-
-CREATE TABLE Premiacao (
-    Colocacao SERIAL PRIMARY KEY,
-    ValorPremiacao DECIMAL(10,2)
-)
 
 -- Tabelas de relacionamento
 CREATE TABLE Torneio_Patrocinador (
