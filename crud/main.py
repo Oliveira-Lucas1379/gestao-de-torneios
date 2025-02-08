@@ -19,23 +19,17 @@ def selecao_inicial(indice):
             return init(True)
 
 def ver_torneio():
-    def altera_torneio(cod_torneio):
-        return
-
-    def deleta_torneio(cod_torneio):
-        return
-
     sumario_torneio = 'Digite o número correspondente para fazer a ação desejada:\n1 - Ver Partidas\n2 - Alterar Torneio \n3 - Excluir Torneio\n9 - Finalizar Gestor de Torneios\nDigite: '
 
     print(f'\nEstes sãos os torneios já cadastrados:\n{lista_torneios()}')
     def selecao_torneio(indice):
         match indice:
             case 1:
-                return print(f'\nEstas são as partidas do torneio:\n{lista_partidas(input('Digite o código do torneio: '))}')
+                return print(f'\nEstas são as partidas do torneio:\n{lista_partidas(input("Digite o código do torneio: "))}')
             case 2:
-                return altera_torneio(input('Digite o código do torneio: '))
+                return altera_torneio(int(input('Digite o código do torneio que deseja alterar: ')))
             case 3:
-                return deleta_torneio(input('Digite o código do torneio: '))
+                return deleta_torneio(int(input('Digite o código do torneio que deseja deletar: ')))
             case 9:
                 return print('Obrigado por utilizar o gestor de torneios! Até a próxima!')
             case _:
@@ -47,6 +41,56 @@ def ver_torneio():
 
     return selecao_inicial('retorno')
 
+def altera_torneio(cod_torneio):
+    def altera(tipo, novo_dado):
+        if tipo == 'times':
+            controller.delete('torneio_time', f'codtorneio = {cod_torneio}')
+            for e in novo_dado:
+                controller.insert('torneio_time', ['codtorneio, codtime'],[cod_torneio, e])
+            altera('partidas')
+
+        elif tipo == 'partidas':
+            controller.delete('partidas', f'codtorneio = {cod_torneio}')
+            controller.criar_partidas(cod_torneio)
+
+        else:
+            controller.update('torneio', {tipo:novo_dado}, {'codtorneio':cod_torneio})
+
+    try:
+        indice_altera = int(input('O que você deseja alterar?\n1 - Partidas\n2 - Nome\n3 - Data de Inicio\n4 - Data Final\n5 - Organizador\n6 - Patrocinador\n7 - Times\n9 - Sair\nDigite: '))
+    except:
+        print('Valor de alteração iválido!')
+        return selecao_inicial('retorno')
+    
+    match indice_altera:
+        case 1:
+            return altera('partidas')
+        case 2:
+            return altera('nome', input('Novo nome: '))
+        case 3:
+            return altera('data_inicio', get_data(0, input('\nAlterar data inicial\nDigite a data conforme o exemplo (01 01 2025): ')))
+        case 4:
+            return altera('data_fim', get_data(0, input('\nAlterar data final\nDigite a data conforme o exemplo (01 01 2025): ')))
+        case 5:
+            return altera('codorganizador', get_organizador(0, int(input('\nQual o Novo Organizador?\nDigite apenas o código: '))))
+        case 6:
+            return altera('codpatrocinador', get_patrocinador(0, input('\nVamos alterar os patrocinadores\nDigite os novos códigos separados por "/"\nExemplo: 01/02/03\nCaso não possua nenhum patrocinador, apenas deixe em branco\nDigite: ')))
+        case 7:
+            return altera('times', get_times(0, input(inputTimes)))
+        case 9:
+            return selecao_inicial('retorno')
+        case _:
+            print('Valor de alteração iválido!')
+            return selecao_inicial('retorno')
+
+
+def deleta_torneio(cod_torneio):
+    if input('\nVocê tem certeza que deseja DELETAR o torneio?\nTodas partidas e informações relacionadas ao torneio também serão deletadas.\nEsta ação é irrevesível\nDigite S para deletar permanentemente: ').upper == 'S': 
+        controller.delete('torneios', f'codtorneio = {cod_torneio}')
+    else:
+        print(f'O torneio NÃO foi deletado')
+        return selecao_inicial('retorno')
+
 def cria_torneio():
     def tentar_novamente(tentar): 
         match tentar.upper():
@@ -57,93 +101,117 @@ def cria_torneio():
             case _:
                 return tentar_novamente(input(f'Valor {tentar} inválido\nDigite S/N: '))
 
-    def validaTimes(times):
-        try:
-            lista_de_times = list(map(int, times.split(' ')))
-        except:
-            return False
-        return True
-
-    def calcula_tier():
-        return 'tier'
+    def calcula_tier(times):
+        return 1
 
     try:
         nome = input('\nVamos criar um torneio! Para isso precisamos de algumas informações.\nQual o nome do seu torneio?\nDigite: ')
         
-        contador = 0
-        dataInvalida = True
-        while dataInvalida:
-            if contador >= 3:
-                raise print('Data invália! Limite máximo de tentativas excedido')
-            
-            data_inicial = input('\nEm que data ele começa?\nDigite a data conforme o exemplo (01 01 2025): ')
-            data_final = input('\nEm que data ele termina?\nDigite a data conforme o exemplo (01 01 2025): ')
-            
-            if re.match(controller.regexData, data_inicial):
-                if re.match(controller.regexData, data_final):
-                    dataInvalida = False
-                else:
-                    print("Data final em formado inválido!")
-            else:
-                print("Data inicial em formado inválido!")
-            contador += 1
+        data_inicial = get_data(0, input('\nEm que data ele começa?\nDigite a data conforme o exemplo (01/01/2025): '))
+        data_final = get_data(0, input('\nEm que data ele termina?\nDigite a data conforme o exemplo (01/01/2025): '))
 
-        contador = 0
         print(lista_organizadores())
-        organizador = ''
-        while organizador not in organizadores:
-            if contador >= 3:
-                raise print('Organizador inválido! Limite máximo de tentativas excedido')
-            organizador = input('\nQual o organizador?\nDigite apenas o código: ')
-            contador += 1
+        organizador = get_organizador(0, int(input('\nQual o organizador?\nDigite apenas o código: ')))
         
-            
-        contador = 0
-        patrocinador = ''
         print(lista_patrocinadores())
-        while patrocinador not in patrocinadores:
-            if contador >= 3:
-                raise print('Patrocinador Inválido! Limite máximo de tentativas excedido')
-            patrocinador = input('\nPossui algum patrocinador?\nDigite os seus códigos separados por "/"\nExemplo: 01/02/03\nCaso não possua nenhum patrocinador, apenas deixe em branco\nDigite: ')
-            contador += 1
+        patrocinadores = get_patrocinador(0, input('\nPossui algum patrocinador?\nDigite os seus códigos separados por "/"\nExemplo: 01/02/03\nCaso não possua nenhum patrocinador, apenas deixe em branco\nDigite: '))   
         
-        contador = 0
-        regiao = ''
         print(lista_regioes())
-        while regiao not in regioes:
-            if contador >= 3:
-                raise print('Região invália! Limite máximo de tentativas excedido')
-
-            regiao = input('\nQual a região?\nDigite apenas o código: ')
-            contador += 1      
-
-        contador = 0
+        regiao = get_regiao(0, int(input('\nQual a região?\nDigite apenas o código: ')))
+        
+        global inputTimes 
         inputTimes = '\nQuais são os times?\nDigite os seus códigos separados por "/"\nExemplo: 01/02/03\nDigite: '
         print(lista_times())
-        while not(validaTimes(input(inputTimes))):
-          if contador >= 3:
-                raise print('Times inválidos! Limite máximo de tentativas excedido')
-          validaTimes(input('\nVocê cometeu um erro ao digitar!\n'+inputTimes))  
-          contador += 1
+        times = get_times(0, input(inputTimes))
         
-        controller.criar_partidas()
-        #insert('torneios', 'nome', nome)
-        #insert('torneios', 'data_inicial', data_inicial)
-        #insert('torneios', 'data_final', data_final)
-        #insert('torneios', 'organizador', organizador)
-        #insert('torneios', 'patrocinador', patrocinador)
-        #insert('torneios', 'data_final', data_final)
-        #insert('torneios', 'tier', calcula_tier())
+        cod_torneio = int(controller.get_all('torneio',['MAX(codtorneio)'])[0][0]) + 1
+        tier = calcula_tier(times)
+        controller.criar_partidas(cod_torneio)
+
+        '''
+        insert correto
+        controller.insert('torneio',
+                        ['codtorneio','nome', 'data_inicial', 'data_final', 'organizador', 'regiao', 'tier'], 
+                        [cod_torneio, nome, data_inicial, data_final, organizador, regiao, tier])
+        '''        
+        #insert parcial
+        controller.insert('torneio', ['codtorneio','nome', 'data', 'codorganizador', 'codtier'], [cod_torneio, nome, data_inicial, organizador, tier])      
+          
+        if patrocinadores:
+            for patrocinador in patrocinadores:
+                controller.insert('torneio_patrocinadores', ['codtorneio'], [patrocinador])
+            
+        for time in times:
+            controller.insert('torneio_times', ['codtorneio'], [time])
         
     except:
         tentar_novamente(input('Ocorreu um erro ao criar o seu torneio, deseja tentar novamente?\nDigite S/N: '))
         return
         
-    print('Torneio {nome} criado com sucesso!')
+    print(f'Torneio {nome} criado com sucesso!')
     
     return selecao_inicial('retorno')
 
+def get_data(contador, data):
+    if contador >= 3:
+        raise print('Data invália! Limite máximo de tentativas excedido')
 
+    if not re.match(controller.regexData, data):
+        return get_data(contador + 1, input("Data em formado inválido!\nDigite a data conforme o exemplo (01/01/2025): "))
+    
+    return data  
+  
+def get_organizador(contador, organizador):
+    if contador >= 3:
+        raise print('Organizador inválido! Limite máximo de tentativas excedido')
+    
+    if not any(tupla[0] == organizador for tupla in organizadores):
+        return get_organizador(contador + 1, int(input('Organizador inválido!\nTente novamente: ')))
+    
+    return organizador
+
+def get_patrocinador(contador, patrocinador):
+    if patrocinador == '':
+        return patrocinador
+    
+    if contador >= 3:
+        raise print('Patrocinador Inválido! Limite máximo de tentativas excedido')
+
+    patrocinadorCod = list(map(int, patrocinador.split("/")))
+
+    for e in patrocinadorCod:
+        if not any(tupla[0] == e for tupla in todos_os_patrocinadores):
+            return get_patrocinador(contador + 1, input('\nPatrocinador inválido!\nDigite os seus códigos separados por "/"\nExemplo: 01/02/03\nCaso não possua nenhum patrocinador, apenas deixe em branco\nDigite: '))
+    
+    return patrocinadorCod
+
+def get_regiao(contador, regiao):
+    if contador >= 3:
+        raise print('Região invália! Limite máximo de tentativas excedido')
+
+    if not any(tupla[0] == regiao for tupla in regioes):
+        return get_regiao(contador+1, int(input('\nregião inválida!\nDigite apenas o código: ')))  
+    
+    return regiao
+
+def get_times(contador, times):
+    if contador >= 3:
+        raise print('Times inválidos! Limite máximo de tentativas excedido')
+    
+    timesCod = list(map(int, times.split('/')))
+
+    for e in timesCod:
+        if not any(tupla[0] == e for tupla in todos_os_times):
+            return get_times(contador + 1, input('\nVocê cometeu um erro ao digitar!\n'+inputTimes))
+    
+    return timesCod
+
+def validaTimes(times):
+    try:
+        list(map(int, times.split('/')))
+    except:
+        return False
+    return True
 
 def lista_torneios():
     global torneios
@@ -157,23 +225,31 @@ def lista_partidas(cod_torneio):
 
 def lista_organizadores():
     global organizadores
-    organizadores = ['teste']
-    return organizadores
+    viewOrganizadores = f"\n\nOrganizadores: \n Codigo    |    NOME\n"
+    organizadores = controller.get_all("organizadores", ["*"])
+    viewOrganizadores += "\n".join(f" {o[0]}    -    {o[1]}" for o in organizadores) + "\n"
+    return viewOrganizadores
 
 def lista_patrocinadores():
-    global patrocinadores
-    patrocinadores = ['teste']
-    return patrocinadores
+    global todos_os_patrocinadores
+    todos_os_patrocinadores = controller.get_all("patrocinadores", ["*"])
+    viewPatrocinadores = f"\n\Patrocinadores: \n CODIGO    |        NOME         |        ORIGEM      \n"
+    viewPatrocinadores += "\n".join(f" {p[0]}     -     {p[1]} -    {p[2]}" for p in todos_os_patrocinadores) + "\n"
+    return viewPatrocinadores
 
 def lista_regioes():
     global regioes
-    regioes = ['teste']
-    return regioes
+    regioes = controller.get_all("regiao", ["*"])
+    viewRegioes = f"\n\nRegioes: \n CODIGO   |        NOME         |          LOCALIZACAO     \n"
+    viewRegioes += "\n".join(f"{r[0]}    -      {r[1]}       -        {r[2]}" for r in regioes)
+    return viewRegioes
 
 def lista_times():
-    global times
-    times = [1,2,3]
-    return times
+    global todos_os_times
+    todos_os_times = controller.get_all("times", ["codtime", "nome"])
+    viewTimes = f"\n\Times: \n CODIGO   |        NOME\n"
+    viewTimes += "\n".join(f"{t[0]}    -      {t[1]}" for t in todos_os_times)
+    return viewTimes
 
 def init(erro):
     if erro:
@@ -187,4 +263,5 @@ def init(erro):
         except:
             selecao_inicial(int(input(f'\nValor inválido!\n{sumario}')))
 
+print(lista_organizadores())
 init(False)
