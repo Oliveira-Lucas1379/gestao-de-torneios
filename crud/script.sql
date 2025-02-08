@@ -46,7 +46,8 @@ CREATE TABLE Jogadores (
 CREATE TABLE Torneio (
     CodTorneio INT PRIMARY KEY,
     Nome VARCHAR(255) NOT NULL,
-    Data DATE,
+    DataInicial DATE,
+	DataFinal DATE,
     CodRegiao INT,
     CodTier INT,
     FOREIGN KEY (CodRegiao) REFERENCES Regiao(CodRegiao),
