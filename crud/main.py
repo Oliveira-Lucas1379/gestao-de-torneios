@@ -127,9 +127,6 @@ def cria_torneio():
             case _:
                 return tentar_novamente(input(f'Valor {tentar} inválido\nDigite S/N: '))
 
-    def calcula_tier(times):
-        return 1
-
     try:
         nome = input('\nVamos criar um torneio! Para isso precisamos de algumas informações.\nQual o nome do seu torneio?\nDigite: ')
         
@@ -145,14 +142,15 @@ def cria_torneio():
         print(lista_regioes())
         regiao = get_regiao(0, int(input('Qual a região?\nDigite apenas o código: ')))
         
+        print(lista_tiers())
+        tier = get_tier(0, int(input('Qual o tier?\nDigite apenas o código: ')))
+
         global inputTimes 
         inputTimes = 'Quais são os times?\nDigite os seus códigos separados por "/"\nExemplo: 01/02/03\nDigite: '
         print(lista_times())
         times = get_times(0, input(inputTimes))
         
         cod_torneio = int(controller.get_all('torneio',['MAX(codtorneio)'])[0][0]) + 1
-        
-        tier = calcula_tier(times)
       
         controller.insert('torneio', ['codtorneio' ,'nome', 'datainicial', 'datafinal', 'codregiao', 'codtier', 'CodOrganizador'],
                           [(cod_torneio, nome, data_inicial, data_final, regiao, tier, organizador)])
@@ -213,6 +211,15 @@ def get_regiao(contador, regiao):
     
     return regiao
 
+def get_tier(contador, tier):
+    if contador >= 3:
+        raise print('Tier inválido! Limite máximo de tentativas excedido')
+
+    if not any(tupla[0] == tier for tupla in tiers):
+        return get_regiao(contador+1, int(input('\ntier inválido!\nDigite apenas o código: ')))  
+    
+    return tier
+
 def get_times(contador, times):
     if contador >= 3:
         raise print('Times inválidos! Limite máximo de tentativas excedido')
@@ -272,6 +279,11 @@ def lista_regioes():
     global regioes
     regioes = controller.get_all("regiao", ["*"])
     return formatacao_dados(["CODIGO", "NOME", "LOCALIZACAO"], regioes)
+
+def lista_tiers():
+    global tiers
+    tiers = controller.get_all("Tier", ["*"])
+    return formatacao_dados(["CODIGO", "DIVISÃO"], tiers)
 
 def lista_times():
     global todos_os_times
