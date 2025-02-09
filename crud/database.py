@@ -14,7 +14,7 @@ def connect():
             user="postgres",
             password= password,
             port= "5432",
-            database= "teste")
+            database= "gestaoTorneios")
         
         print("Conexão sucedida ao postgres")
 

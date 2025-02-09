@@ -1,5 +1,5 @@
 from database import connect, end_connection
-
+from datetime import datetime, date
 
 connection = connect()
 cursor = connection.cursor()
@@ -80,7 +80,7 @@ def delete(table, condition):
     print(f"Dados deletados da tabela {table}")
 
 
-regexData = r"^(0[1-9]|[12][0-9]|3[01])/(0[1-9]|1[0-2])/\d{4}$"
+regexData = r"^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$"
 
 def criar_partidas(cod_torneio):
     
@@ -116,5 +116,7 @@ if __name__ == "__main__":
             ["organizadores.nome", "DESC"])
     '''
 
-
+    #insert('torneio', ['codtorneio', 'nome', 'datainicial', 'datafinal', 'codregiao', 'codtier'], [("7", "Rio de Janeiro Qualifiers", "2025-01-01", "2025-02-02", "1", "1")])  
     #insert("organizadores", ["codorganizador", "nome"], "")
+
+    #print(datetime.date(2023, 10, 1))

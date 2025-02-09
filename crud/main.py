@@ -1,6 +1,7 @@
 import controller
 import datetime
 import re
+from datetime import datetime, date
 
 sumario = 'Digite o número correspondente para fazer a ação desejada:\n1 - Criar Torneio \n2 - Ver Torneio\n9 - Finalizar Gestor de Torneios\nDigite: '
 
@@ -107,8 +108,8 @@ def cria_torneio():
     try:
         nome = input('\nVamos criar um torneio! Para isso precisamos de algumas informações.\nQual o nome do seu torneio?\nDigite: ')
         
-        data_inicial = get_data(0, input('\nEm que data ele começa?\nDigite a data conforme o exemplo (01/01/2025): '))
-        data_final = get_data(0, input('\nEm que data ele termina?\nDigite a data conforme o exemplo (01/01/2025): '))
+        data_inicial = get_data(0, input('\nEm que data ele começa?\nDigite a data conforme o exemplo (2025-01-01): '))
+        data_final = get_data(0, input('\nEm que data ele termina?\nDigite a data conforme o exemplo (2025-01-01): '))
 
         print(lista_organizadores())
         organizador = get_organizador(0, int(input('\nQual o organizador?\nDigite apenas o código: ')))
@@ -135,14 +136,20 @@ def cria_torneio():
                         [cod_torneio, nome, data_inicial, data_final, organizador, regiao, tier])
         '''        
         #insert parcial
-        controller.insert('torneio', ['codtorneio','nome', 'data', 'codorganizador', 'codtier'], [cod_torneio, nome, data_inicial, organizador, tier])      
+        controller.insert('torneio', ['codtorneio' ,'nome', 'datainicial', 'datafinal', 'codregiao', 'codtier'],
+                          [(cod_torneio, nome, data_inicial, data_final, regiao, tier)])
+
+        controller.insert('torneio_organizador', ['codtorneio', 'codorganizador'], [(cod_torneio, organizador)])  
           
         if patrocinadores:
             for patrocinador in patrocinadores:
-                controller.insert('torneio_patrocinadores', ['codtorneio'], [patrocinador])
-            
+                controller.insert('torneio_patrocinador', ['codtorneio', 'codpatrocinador'], [(cod_torneio, patrocinador)])
+
+        # Aparentemente não tem o torneio_times
+        '''
         for time in times:
-            controller.insert('torneio_times', ['codtorneio'], [time])
+            controller.insert('torneio_times', ['codtorneio'], [(time)])
+            '''
         
     except:
         tentar_novamente(input('Ocorreu um erro ao criar o seu torneio, deseja tentar novamente?\nDigite S/N: '))
@@ -157,7 +164,7 @@ def get_data(contador, data):
         raise print('Data invália! Limite máximo de tentativas excedido')
 
     if not re.match(controller.regexData, data):
-        return get_data(contador + 1, input("Data em formado inválido!\nDigite a data conforme o exemplo (01/01/2025): "))
+        return get_data(contador + 1, input("Data em formado inválido!\nDigite a data conforme o exemplo (2025-01-01): "))
     
     return data  
   
@@ -215,41 +222,48 @@ def validaTimes(times):
 
 def lista_torneios():
     global torneios
-    torneios = ['teste']
-    return torneios
+    torneios = controller.get_all("torneio", ["*"])
+    return formatacao_dados(["CODIGO", "NOME", "DATA-INICIAL", "DATA-FINAL", "CODIGO-REGIAO", "CODIGO-TIER"], torneios)
 
 def lista_partidas(cod_torneio):
+    condition = f'torneio.codtorneio = {cod_torneio}'
+    columns = ["partidas.codpartida", "partidas.data", "torneio.nome", "resultados.resultado", "tv.nome", "tp.nome", "tier.divisao"]
+    join_clause = [("torneio", "partidas.codtorneio", "torneio.codtorneio"),
+                ("resultados", "partidas.idresultado", "resultados.id"),
+                ("times tv", "resultados.CodTimeVencedor", "tv.codtime"),
+                ("times tp", "resultados.CodTimePerdedor", "tp.codtime"),
+                ("tier", "tier.codtier", "torneio.codtier")]
     global partidas
-    partidas = ['teste']
-    return partidas
+    partidas = controller.get_all("partidas", columns, join_clause, condition)
+    return formatacao_dados(["CODIGO", "DATA", "NOME-TORNEIO", "RESULTADO", "TIME-VENCEDOR", "TIME-PERDEDOR", "TIER"], partidas)
 
 def lista_organizadores():
     global organizadores
-    viewOrganizadores = f"\n\nOrganizadores: \n Codigo    |    NOME\n"
     organizadores = controller.get_all("organizadores", ["*"])
-    viewOrganizadores += "\n".join(f" {o[0]}    -    {o[1]}" for o in organizadores) + "\n"
-    return viewOrganizadores
+    return formatacao_dados(["CODIGO", "NOME"], organizadores)
 
 def lista_patrocinadores():
     global todos_os_patrocinadores
     todos_os_patrocinadores = controller.get_all("patrocinadores", ["*"])
-    viewPatrocinadores = f"\n\Patrocinadores: \n CODIGO    |        NOME         |        ORIGEM      \n"
-    viewPatrocinadores += "\n".join(f" {p[0]}     -     {p[1]} -    {p[2]}" for p in todos_os_patrocinadores) + "\n"
-    return viewPatrocinadores
+    return formatacao_dados(["CODIGO", "NOME", "ORIGEM"], todos_os_patrocinadores)
 
 def lista_regioes():
     global regioes
     regioes = controller.get_all("regiao", ["*"])
-    viewRegioes = f"\n\nRegioes: \n CODIGO   |        NOME         |          LOCALIZACAO     \n"
-    viewRegioes += "\n".join(f"{r[0]}    -      {r[1]}       -        {r[2]}" for r in regioes)
-    return viewRegioes
+    return formatacao_dados(["CODIGO", "NOME", "LOCALIZACAO"], regioes)
 
 def lista_times():
     global todos_os_times
     todos_os_times = controller.get_all("times", ["codtime", "nome"])
-    viewTimes = f"\n\Times: \n CODIGO   |        NOME\n"
-    viewTimes += "\n".join(f"{t[0]}    -      {t[1]}" for t in todos_os_times)
-    return viewTimes
+    return formatacao_dados(["CODIGO", "NOME"], todos_os_times)
+
+def formatacao_dados(cabecalhos, dados):
+    larguras = [max(len(str(item))for item in coluna) for coluna in zip(cabecalhos, *dados)]
+    tabela = "  ".join(header.ljust(larguras[i]) for i, header in enumerate(cabecalhos)) + "\n"
+    tabela += "-".join("-" * (largura + 2) for largura in larguras) + "\n"
+    for linha in dados:
+        tabela += "  ".join(str(item).ljust(larguras[i]) for i, item in enumerate(linha)) + "\n"
+    return tabela
 
 def init(erro):
     if erro:
@@ -263,5 +277,5 @@ def init(erro):
         except:
             selecao_inicial(int(input(f'\nValor inválido!\n{sumario}')))
 
-print(lista_organizadores())
 init(False)
+
