@@ -1,7 +1,8 @@
 import controller
+import random
+import time
 import datetime
 import re
-from datetime import datetime, date
 
 sumario = 'Digite o número correspondente para fazer a ação desejada:\n1 - Criar Torneio \n2 - Ver Torneio\n9 - Finalizar Gestor de Torneios\nDigite: '
 
@@ -28,11 +29,11 @@ def ver_torneio():
             case 1:
                 return print(f'\nEstas são as partidas do torneio:\n{lista_partidas(input("Digite o código do torneio: "))}')
             case 2:
-                return altera_torneio(int(input('Digite o código do torneio que deseja alterar: ')))
+                return altera_torneio(int(input('\nDigite o código do torneio que deseja alterar: ')))
             case 3:
-                return deleta_torneio(int(input('Digite o código do torneio que deseja deletar: ')))
+                return deleta_torneio(int(input('\nDigite o código do torneio que deseja deletar: ')))
             case 9:
-                return print('Obrigado por utilizar o gestor de torneios! Até a próxima!')
+                return print('\nObrigado por utilizar o gestor de torneios! Até a próxima!')
             case _:
                 return selecao_torneio(int(input(f'Valor {indice} inválido\n{sumario_torneio}')))                
     try:
@@ -43,7 +44,7 @@ def ver_torneio():
     return selecao_inicial('retorno')
 
 def altera_torneio(cod_torneio):
-    def altera(tipo, novo_dado):
+    def altera(tipo, novo_dado = None):
         if tipo == 'times':
             controller.delete('torneio_time', f'codtorneio = {cod_torneio}')
             for e in novo_dado:
@@ -51,11 +52,18 @@ def altera_torneio(cod_torneio):
             altera('partidas')
 
         elif tipo == 'partidas':
-            controller.delete('partidas', f'codtorneio = {cod_torneio}')
-            controller.criar_partidas(cod_torneio)
+            times = controller.get_all(f'GetTimesByTorneio({cod_torneio})', ['*'])
+            cod_partidas = controller.get_all('partidas',['CodPartida'], condition = f'CodTorneio = {cod_torneio}')
+
+            for cod_partida in cod_partidas:
+                controller.delete('Times_Partidas', {'codPartida' : cod_partida})
+
+            controller.delete('partidas', {'CodTorneio' : cod_torneio})
+    
+            criar_partidas(cod_torneio, times)
 
         else:
-            controller.update('torneio', {tipo:novo_dado}, {'codtorneio':cod_torneio})
+            controller.update('torneio', {tipo:novo_dado}, {'CodTorneio':cod_torneio})
 
     try:
         indice_altera = int(input('O que você deseja alterar?\n1 - Partidas\n2 - Nome\n3 - Data de Inicio\n4 - Data Final\n5 - Organizador\n6 - Patrocinador\n7 - Times\n9 - Sair\nDigite: '))
@@ -108,26 +116,25 @@ def cria_torneio():
     try:
         nome = input('\nVamos criar um torneio! Para isso precisamos de algumas informações.\nQual o nome do seu torneio?\nDigite: ')
         
-        data_inicial = get_data(0, input('\nEm que data ele começa?\nDigite a data conforme o exemplo (2025-01-01): '))
-        data_final = get_data(0, input('\nEm que data ele termina?\nDigite a data conforme o exemplo (2025-01-01): '))
+        data_inicial = get_data(0, input('\nEm que data ele começa?\nDigite a data conforme o exemplo (AAAA-MM-DD): '))
+        data_final = get_data(0, input('\nEm que data ele termina?\nDigite a data conforme o exemplo (AAAA-MM-): '))
 
         print(lista_organizadores())
-        organizador = get_organizador(0, int(input('\nQual o organizador?\nDigite apenas o código: ')))
+        organizador = get_organizador(0, int(input('Qual o organizador?\nDigite apenas o código: ')))
         
         print(lista_patrocinadores())
-        patrocinadores = get_patrocinador(0, input('\nPossui algum patrocinador?\nDigite os seus códigos separados por "/"\nExemplo: 01/02/03\nCaso não possua nenhum patrocinador, apenas deixe em branco\nDigite: '))   
+        patrocinadores = get_patrocinador(0, input('Possui algum patrocinador?\nDigite os seus códigos separados por "/"\nExemplo: 01/02/03\nCaso não possua nenhum patrocinador, apenas deixe em branco\nDigite: '))   
         
         print(lista_regioes())
-        regiao = get_regiao(0, int(input('\nQual a região?\nDigite apenas o código: ')))
+        regiao = get_regiao(0, int(input('Qual a região?\nDigite apenas o código: ')))
         
         global inputTimes 
-        inputTimes = '\nQuais são os times?\nDigite os seus códigos separados por "/"\nExemplo: 01/02/03\nDigite: '
+        inputTimes = 'Quais são os times?\nDigite os seus códigos separados por "/"\nExemplo: 01/02/03\nDigite: '
         print(lista_times())
         times = get_times(0, input(inputTimes))
         
         cod_torneio = int(controller.get_all('torneio',['MAX(codtorneio)'])[0][0]) + 1
         tier = calcula_tier(times)
-        controller.criar_partidas(cod_torneio)
 
         '''
         insert correto
@@ -145,11 +152,7 @@ def cria_torneio():
             for patrocinador in patrocinadores:
                 controller.insert('torneio_patrocinador', ['codtorneio', 'codpatrocinador'], [(cod_torneio, patrocinador)])
 
-        # Aparentemente não tem o torneio_times
-        '''
-        for time in times:
-            controller.insert('torneio_times', ['codtorneio'], [(time)])
-            '''
+        criar_partidas(cod_torneio, times)
         
     except:
         tentar_novamente(input('Ocorreu um erro ao criar o seu torneio, deseja tentar novamente?\nDigite S/N: '))
@@ -259,11 +262,41 @@ def lista_times():
 
 def formatacao_dados(cabecalhos, dados):
     larguras = [max(len(str(item))for item in coluna) for coluna in zip(cabecalhos, *dados)]
-    tabela = "  ".join(header.ljust(larguras[i]) for i, header in enumerate(cabecalhos)) + "\n"
+    tabela = "\n" + "  ".join(header.ljust(larguras[i]) for i, header in enumerate(cabecalhos)) + "\n"
     tabela += "-".join("-" * (largura + 2) for largura in larguras) + "\n"
     for linha in dados:
         tabela += "  ".join(str(item).ljust(larguras[i]) for i, item in enumerate(linha)) + "\n"
     return tabela
+
+def str_time_prop(start, end, time_format, prop):
+    stime = time.mktime(time.strptime(start, time_format))
+    etime = time.mktime(time.strptime(end, time_format))
+
+    ptime = stime + prop * (etime - stime)
+
+    return time.strftime(time_format, time.localtime(ptime))
+
+def random_date(start, end, prop):
+    return str_time_prop(start, end, '%Y-%m-%d', prop)
+
+def criar_partidas(cod_torneio, times=None):  
+    data_inicio, data_fim = controller.get_all('Torneio', ['DataInicial', 'DataFinal'], condition = f'CodTorneio = {cod_torneio}')[0]
+    if not times:
+        times_participantes = controller.get_all(f'GetTimesByTorneio({cod_torneio})', ['*'])
+    else:
+        times_participantes = times
+
+    for time in times_participantes:
+        times_participantes = times_participantes[1:]
+        for e in list(range(len(times_participantes))):
+            data_partida = random_date(data_inicio.strftime('%Y-%m-%d'), data_fim.strftime('%Y-%m-%d'), random.random())
+            controller.insert('partidas', ['CodTorneio', 'Data'], [(cod_torneio, data_partida)])
+            
+            codpartida = int(controller.get_all('Partidas',['MAX(CodPartida)'])[0][0])
+
+            controller.insert('Times_Partidas', ['CodPartida', 'CodTime'], [(codpartida, time)])
+            controller.insert('Times_Partidas', ['CodPartida', 'CodTime'], [(codpartida, times_participantes[e])])
+    
 
 def init(erro):
     if erro:

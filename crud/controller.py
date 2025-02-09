@@ -79,12 +79,7 @@ def delete(table, condition):
     connection.commit()
     print(f"Dados deletados da tabela {table}")
 
-
 regexData = r"^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$"
-
-def criar_partidas(cod_torneio):
-    
-    return
 
 if __name__ == "__main__":
     # Teste de usos
