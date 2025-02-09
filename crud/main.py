@@ -53,13 +53,7 @@ def altera_torneio(cod_torneio):
 
         elif tipo == 'partidas':
             times = controller.get_all(f'GetTimesByTorneio({cod_torneio})', ['*'])
-            cod_partidas = controller.get_all('partidas',['CodPartida'], condition = f'CodTorneio = {cod_torneio}')
-
-            for cod_partida in cod_partidas:
-                controller.delete('Times_Partidas', {'codPartida' : cod_partida})
-
-            controller.delete('partidas', {'CodTorneio' : cod_torneio})
-    
+            deletar_partidas(cod_torneio)
             criar_partidas(cod_torneio, times)
 
         else:
@@ -94,8 +88,14 @@ def altera_torneio(cod_torneio):
 
 
 def deleta_torneio(cod_torneio):
-    if input('\nVocê tem certeza que deseja DELETAR o torneio?\nTodas partidas e informações relacionadas ao torneio também serão deletadas.\nEsta ação é irrevesível\nDigite S para deletar permanentemente: ').upper == 'S': 
-        controller.delete('torneios', f'codtorneio = {cod_torneio}')
+    validador = input('\nVocê tem certeza que deseja DELETAR o torneio?\nTodas partidas e informações relacionadas ao torneio também serão deletadas.\nEsta ação é irrevesível\nDigite S para deletar permanentemente: ')
+    if  validador.upper() == 'S': 
+        controller.delete('Torneio_Patrocinador', {'CodTorneio':cod_torneio})
+        controller.delete('Classificacoes', {'CodTorneio':cod_torneio})
+        deletar_partidas(cod_torneio)
+        controller.delete('Torneio', {'CodTorneio':cod_torneio})
+        print('\nTorneio Deletado!')
+
     else:
         print(f'O torneio NÃO foi deletado')
         return selecao_inicial('retorno')
@@ -134,19 +134,11 @@ def cria_torneio():
         times = get_times(0, input(inputTimes))
         
         cod_torneio = int(controller.get_all('torneio',['MAX(codtorneio)'])[0][0]) + 1
+        
         tier = calcula_tier(times)
-
-        '''
-        insert correto
-        controller.insert('torneio',
-                        ['codtorneio','nome', 'data_inicial', 'data_final', 'organizador', 'regiao', 'tier'], 
-                        [cod_torneio, nome, data_inicial, data_final, organizador, regiao, tier])
-        '''        
-        #insert parcial
-        controller.insert('torneio', ['codtorneio' ,'nome', 'datainicial', 'datafinal', 'codregiao', 'codtier'],
-                          [(cod_torneio, nome, data_inicial, data_final, regiao, tier)])
-
-        controller.insert('torneio_organizador', ['codtorneio', 'codorganizador'], [(cod_torneio, organizador)])  
+      
+        controller.insert('torneio', ['codtorneio' ,'nome', 'datainicial', 'datafinal', 'codregiao', 'codtier', 'CodOrganizador'],
+                          [(cod_torneio, nome, data_inicial, data_final, regiao, tier, organizador)])
           
         if patrocinadores:
             for patrocinador in patrocinadores:
@@ -297,6 +289,14 @@ def criar_partidas(cod_torneio, times=None):
             controller.insert('Times_Partidas', ['CodPartida', 'CodTime'], [(codpartida, time)])
             controller.insert('Times_Partidas', ['CodPartida', 'CodTime'], [(codpartida, times_participantes[e])])
     
+def deletar_partidas(cod_torneio):
+    cod_partidas = controller.get_all('partidas',['CodPartida'], condition = f'CodTorneio = {cod_torneio}')
+
+    for cod_partida in cod_partidas:
+        controller.delete('Times_Partidas', {'codPartida' : cod_partida})
+
+    controller.delete('partidas', {'CodTorneio' : cod_torneio})
+
 
 def init(erro):
     if erro:
