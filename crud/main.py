@@ -6,6 +6,7 @@ import re
 
 sumario = 'Digite o número correspondente para fazer a ação desejada:\n1 - Criar Torneio \n2 - Ver Torneio\n9 - Finalizar Gestor de Torneios\nDigite: '
 
+inputTimes = 'Quais são os times?\nDigite os seus códigos separados por "/"\nExemplo: 01/02/03\nDigite: '
 
 def selecao_inicial(indice):
     match indice:
@@ -46,19 +47,14 @@ def ver_torneio():
 def altera_torneio(cod_torneio):
     def altera(tipo, novo_dado = None):
         if tipo == 'times':
-            controller.delete('torneio_time', f'codtorneio = {cod_torneio}')
-            for e in novo_dado:
-                controller.insert('torneio_time', ['codtorneio, codtime'],[cod_torneio, e])
-
-            times = controller.get_all(f'GetTimesByTorneio({cod_torneio})', ['*'])
             deletar_partidas(cod_torneio)
-            criar_partidas(cod_torneio, times)
+            criar_partidas(cod_torneio, novo_dado)
 
         else:
             controller.update('torneio', {tipo:novo_dado}, {'CodTorneio':cod_torneio})
 
     try:
-        indice_altera = int(input('O que você deseja alterar?\n1 - Partidas\n2 - Nome\n3 - Data de Inicio\n4 - Data Final\n5 - Organizador\n6 - Patrocinador\n7 - Times\n9 - Sair\nDigite: '))
+        indice_altera = int(input('O que você deseja alterar?\n1 - Partidas\n2 - Nome\n3 - Data de Inicio\n4 - Data Final\n5 - Organizador\n6 - Região\n7 - Tier\n8 - Times\n9 - Sair\nDigite: '))
     except:
         print('Valor de alteração iválido!')
         return selecao_inicial('retorno')
@@ -69,14 +65,17 @@ def altera_torneio(cod_torneio):
         case 2:
             return altera('nome', input('Novo nome: '))
         case 3:
-            return altera('data_inicio', get_data(0, input('\nAlterar data inicial\nDigite a data conforme o exemplo (01 01 2025): ')))
+            return altera('DataInicial', get_data(0, input('\nAlterar data inicial\nDigite a data conforme o exemplo (AAAA-MM-DD): ')))
         case 4:
-            return altera('data_fim', get_data(0, input('\nAlterar data final\nDigite a data conforme o exemplo (01 01 2025): ')))
+            return altera('DataFinal', get_data(0, input('\nAlterar data final\nDigite a data conforme o exemplo (AAAA-MM-DD): ')))
         case 5:
-            return altera('codorganizador', get_organizador(0, int(input('\nQual o Novo Organizador?\nDigite apenas o código: '))))
+            return altera('CodOrganizador', get_organizador(0, int(input('\nQual o Novo Organizador?\nDigite apenas o código: '))))
         case 6:
-            return altera('codpatrocinador', get_patrocinador(0, input('\nVamos alterar os patrocinadores\nDigite os novos códigos separados por "/"\nExemplo: 01/02/03\nCaso não possua nenhum patrocinador, apenas deixe em branco\nDigite: ')))
+            return altera('CodRegiao', get_regiao(0, int(input('Qual a nova região?\nDigite apenas o código: '))))
         case 7:
+            return altera('CodTier', get_tier(0, int(input('Qual o novo tier?\nDigite apenas o código: '))))
+        case 8:
+            print(lista_times())
             return altera('times', get_times(0, input(inputTimes)))
         case 9:
             return selecao_inicial('retorno')
@@ -144,9 +143,7 @@ def cria_torneio():
         
         print(lista_tiers())
         tier = get_tier(0, int(input('Qual o tier?\nDigite apenas o código: ')))
-
-        global inputTimes 
-        inputTimes = 'Quais são os times?\nDigite os seus códigos separados por "/"\nExemplo: 01/02/03\nDigite: '
+        
         print(lista_times())
         times = get_times(0, input(inputTimes))
         
@@ -241,12 +238,11 @@ def get_idtime_partida(contador, idtime, times_da_partida, outro_time = None):
     
     return idtime  
 
-def validaTimes(times):
-    try:
-        list(map(int, times.split('/')))
-    except:
-        return False
-    return True
+
+def lista_times():
+    global todos_os_times
+    todos_os_times = controller.get_all("times", ["codtime", "nome"])
+    return formatacao_dados(["CODIGO", "NOME"], todos_os_times)
 
 def lista_torneios():
     global torneios
@@ -284,11 +280,6 @@ def lista_tiers():
     global tiers
     tiers = controller.get_all("Tier", ["*"])
     return formatacao_dados(["CODIGO", "DIVISÃO"], tiers)
-
-def lista_times():
-    global todos_os_times
-    todos_os_times = controller.get_all("times", ["codtime", "nome"])
-    return formatacao_dados(["CODIGO", "NOME"], todos_os_times)
 
 def formatacao_dados(cabecalhos, dados):
     larguras = [max(len(str(item))for item in coluna) for coluna in zip(cabecalhos, *dados)]
