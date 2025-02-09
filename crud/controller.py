@@ -24,7 +24,7 @@ def insert(table, columns, values):
 Recupera todos os registros de uma tabela e colunas especificadas.
 :param table: O nome da tabela a ser consultada.
 :param columns: Uma lista com os nomes das colunas a serem recuperadas.
-:param join_clause: Uma lista de tuplas onde a tupla é (tabela, associacao, associacao)
+:param join_clause: Uma lista de tuplas onde a tupla é (tabela, associacao, associacao, tipo)
 :param condition: Possui a condição para ser utilizado no WHERE
 :param order_by: Lista de 2 posições, posição 1 = coluna, posição 2 = ASC ou DESC
 :return: Uma lista de tuplas contendo os dados consultados.
@@ -35,7 +35,7 @@ def get_all(table, columns, join_clause=None, condition=None, order_by=None):
 
     if join_clause:
         for join_tuple in join_clause:
-            cmd_get += f" JOIN {join_tuple[0]} ON {join_tuple[1]} = {join_tuple[2]}"
+            cmd_get += f" {join_tuple[3]} JOIN {join_tuple[0]} ON {join_tuple[1]} = {join_tuple[2]}"
 
     if condition:
         cmd_get += f" WHERE {condition}"

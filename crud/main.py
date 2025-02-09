@@ -49,9 +49,7 @@ def altera_torneio(cod_torneio):
             controller.delete('torneio_time', f'codtorneio = {cod_torneio}')
             for e in novo_dado:
                 controller.insert('torneio_time', ['codtorneio, codtime'],[cod_torneio, e])
-            altera('partidas')
 
-        elif tipo == 'partidas':
             times = controller.get_all(f'GetTimesByTorneio({cod_torneio})', ['*'])
             deletar_partidas(cod_torneio)
             criar_partidas(cod_torneio, times)
@@ -67,7 +65,7 @@ def altera_torneio(cod_torneio):
     
     match indice_altera:
         case 1:
-            return altera('partidas')
+            return alterar_partidas(cod_torneio)
         case 2:
             return altera('nome', input('Novo nome: '))
         case 3:
@@ -86,6 +84,25 @@ def altera_torneio(cod_torneio):
             print('Valor de alteração iválido!')
             return selecao_inicial('retorno')
 
+def alterar_partidas(cod_torneio):
+    print(lista_partidas(cod_torneio))
+
+    partida = int(input('Digite o código da partida que deseja alterar: '))
+        
+    times_da_partida = controller.get_all('Times', ['Times.CodTime, Times.Nome'], [('Times_Partidas', 'Times.CodTime', 'Times_Partidas.CodTime', '')] ,f'Times_Partidas.CodPartida = {partida}')
+    print(formatacao_dados(['CODIGO','NOME'], times_da_partida))
+
+    vencedor = get_idtime_partida(0, int(input('Digite código o time Vencedor: ')), times_da_partida) 
+    perdedor = get_idtime_partida(0, int(input('Digite código o time Perdedor: ')), times_da_partida, vencedor)
+    resultado = input('Digite resultado seguindo o exemplo (13x9): ')
+
+    id_resultado = controller.get_all('Partidas', ['idResultado'], condition=f'CodPartida = {partida}')[0]
+    if id_resultado[0]:
+        controller.update('Resultados', {'Resultado':resultado, 'CodTimeVencedor':vencedor, 'CodTimePerdedor':perdedor}, condition={'id' :id_resultado})
+    else:
+        controller.insert('Resultados',['Resultado', 'CodTimeVencedor', 'CodTimePerdedor'], [(resultado, vencedor, perdedor)])
+        id_resultado = controller.get_all('Resultados',['MAX(id)'])[0][0]
+        controller.update('Partidas', {'idResultado':id_resultado}, condition={'CodPartida':partida})
 
 def deleta_torneio(cod_torneio):
     validador = input('\nVocê tem certeza que deseja DELETAR o torneio?\nTodas partidas e informações relacionadas ao torneio também serão deletadas.\nEsta ação é irrevesível\nDigite S para deletar permanentemente: ')
@@ -208,6 +225,15 @@ def get_times(contador, times):
     
     return timesCod
 
+def get_idtime_partida(contador, idtime, times_da_partida, outro_time = None):
+    if contador >= 3:
+        raise print('Time inválio! Limite máximo de tentativas excedido')
+
+    if not(any(tupla[0] == idtime for tupla in times_da_partida)) or idtime == outro_time:
+        return get_idtime_partida(contador+1, int(input('\Time inválido!\nDigite apenas o código: ')), times_da_partida, outro_time)  
+    
+    return idtime  
+
 def validaTimes(times):
     try:
         list(map(int, times.split('/')))
@@ -223,11 +249,11 @@ def lista_torneios():
 def lista_partidas(cod_torneio):
     condition = f'torneio.codtorneio = {cod_torneio}'
     columns = ["partidas.codpartida", "partidas.data", "torneio.nome", "resultados.resultado", "tv.nome", "tp.nome", "tier.divisao"]
-    join_clause = [("torneio", "partidas.codtorneio", "torneio.codtorneio"),
-                ("resultados", "partidas.idresultado", "resultados.id"),
-                ("times tv", "resultados.CodTimeVencedor", "tv.codtime"),
-                ("times tp", "resultados.CodTimePerdedor", "tp.codtime"),
-                ("tier", "tier.codtier", "torneio.codtier")]
+    join_clause = [("torneio", "partidas.codtorneio", "torneio.codtorneio", ""),
+                ("resultados", "partidas.idresultado", "resultados.id", "LEFT"),
+                ("times tv", "resultados.CodTimeVencedor", "tv.codtime", "LEFT"),
+                ("times tp", "resultados.CodTimePerdedor", "tp.codtime", "LEFT"),
+                ("tier", "tier.codtier", "torneio.codtier", "")]
     global partidas
     partidas = controller.get_all("partidas", columns, join_clause, condition)
     return formatacao_dados(["CODIGO", "DATA", "NOME-TORNEIO", "RESULTADO", "TIME-VENCEDOR", "TIME-PERDEDOR", "TIER"], partidas)
