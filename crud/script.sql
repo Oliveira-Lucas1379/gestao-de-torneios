@@ -50,8 +50,10 @@ CREATE TABLE Torneio (
 	DataFinal DATE,
     CodRegiao INT,
     CodTier INT,
+    CodOrganizador INT,
     FOREIGN KEY (CodRegiao) REFERENCES Regiao(CodRegiao),
-    FOREIGN KEY (CodTier) REFERENCES Tier(CodTier)
+    FOREIGN KEY (CodTier) REFERENCES Tier(CodTier),
+    FOREIGN KEY (CodOrganizador) REFERENCES Organizadores(CodOrganizador),
 );
 
 CREATE TABLE Resultados (
@@ -94,14 +96,6 @@ CREATE TABLE Torneio_Patrocinador (
     PRIMARY KEY (CodTorneio, CodPatrocinador),
     FOREIGN KEY (CodTorneio) REFERENCES Torneio(CodTorneio),
     FOREIGN KEY (CodPatrocinador) REFERENCES Patrocinadores(CodPatrocinador)
-);
-
-CREATE TABLE Torneio_Organizador (
-    CodTorneio INT,
-    CodOrganizador INT,
-    PRIMARY KEY (CodTorneio, CodOrganizador),
-    FOREIGN KEY (CodTorneio) REFERENCES Torneio(CodTorneio),
-    FOREIGN KEY (CodOrganizador) REFERENCES Organizadores(CodOrganizador)
 );
 
 CREATE TABLE Times_Partidas (
