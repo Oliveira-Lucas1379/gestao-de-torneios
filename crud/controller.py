@@ -115,3 +115,8 @@ if __name__ == "__main__":
     #insert("organizadores", ["codorganizador", "nome"], "")
 
     #print(datetime.date(2023, 10, 1))
+
+    #update("torneio", {"nome": "Champions Brasilia"}, {"codtorneio": 8})
+
+    c = 'LOUD'
+    print(get_all("times", ["codtime"], None, f"nome = '{c}'"))
