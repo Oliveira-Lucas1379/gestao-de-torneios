@@ -81,18 +81,21 @@ def altera_torneio(cod_torneio):
         case 1:
             return alterar_partidas(cod_torneio)
         case 2:
-            return altera('nome')
+            return altera('nome', input('\nQual o novo nome do torneio: '))
         case 3:
             return altera('DataInicial', get_data(0, input('\nAlterar data inicial\nDigite a data conforme o exemplo (AAAA-MM-DD): ')))
         case 4:
             return altera('DataFinal', get_data(0, input('\nAlterar data final\nDigite a data conforme o exemplo (AAAA-MM-DD): ')))
         case 5:
+            print(lista_organizadores())
             return altera('CodOrganizador', get_organizador(0, int(input('\nQual o Novo Organizador?\nDigite apenas o código: '))))
         case 6:
             return altera('codpatrocinador')
         case 7:
+            print(lista_regioes())
             return altera('CodRegiao', get_regiao(0, int(input('Qual a nova região?\nDigite apenas o código: '))))
         case 8:
+            print(lista_tiers())
             return altera('CodTier', get_tier(0, int(input('Qual o novo tier?\nDigite apenas o código: '))))
         case 9:
             print(lista_times())
