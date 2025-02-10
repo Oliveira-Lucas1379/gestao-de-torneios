@@ -28,7 +28,7 @@ def ver_torneio():
     def selecao_torneio(indice):
         match indice:
             case 1:
-                return print(f'\nEstas são as partidas do torneio:\n{lista_partidas_torneio(input("Digite o código do torneio: "))}')
+                return print(f'\nEstas são as partidas do torneio:\n{lista_partidas(input("Digite o código do torneio: "))}')
             case 2:
                 return altera_torneio(int(input('\nDigite o código do torneio que deseja alterar: ')))
             case 3:
@@ -53,8 +53,8 @@ def altera_torneio(cod_torneio):
         elif tipo == 'codpatrocinador':
             columns = ["patrocinadores.codpatrocinador", "patrocinadores.nome", "torneio.nome"]
             condition = f'torneio.codtorneio = {cod_torneio}'
-            join_clause = [("torneio_patrocinador", "torneio.codtorneio", "torneio_patrocinador.codtorneio"),
-                           ("patrocinadores", "torneio_patrocinador.codpatrocinador", "patrocinadores.codpatrocinador"),
+            join_clause = [("torneio_patrocinador", "torneio.codtorneio", "torneio_patrocinador.codtorneio", ''),
+                           ("patrocinadores", "torneio_patrocinador.codpatrocinador", "patrocinadores.codpatrocinador", ''),
                            ]
             patrocinadores = controller.get_all("torneio", columns, join_clause, condition)
             print(formatacao_dados(["CODIGO", "NOME-PATROCINADOR", "NOME-TORNEIO"], patrocinadores))
@@ -72,7 +72,7 @@ def altera_torneio(cod_torneio):
             controller.update('torneio', {tipo:novo_dado}, {'CodTorneio':cod_torneio})
 
     try:
-        indice_altera = int(input('O que você deseja alterar?\n1 - Partidas\n2 - Nome\n3 - Data de Inicio\n4 - Data Final\n5 - Organizador\n6 - Região\n7 - Tier\n8 - Times\n9 - Sair\nDigite: '))
+        indice_altera = int(input('O que você deseja alterar?\n1 - Partidas\n2 - Nome\n3 - Data de Inicio\n4 - Data Final\n5 - Organizador\n6 - Patrocinador\n7 - Região\n8 - Tier\n9 - Times\n10 - Sair\nDigite: '))
     except:
         print('Valor de alteração inválido!')
         return selecao_inicial('retorno')
@@ -89,13 +89,15 @@ def altera_torneio(cod_torneio):
         case 5:
             return altera('CodOrganizador', get_organizador(0, int(input('\nQual o Novo Organizador?\nDigite apenas o código: '))))
         case 6:
-            return altera('CodRegiao', get_regiao(0, int(input('Qual a nova região?\nDigite apenas o código: '))))
+            return altera('codpatrocinador')
         case 7:
-            return altera('CodTier', get_tier(0, int(input('Qual o novo tier?\nDigite apenas o código: '))))
+            return altera('CodRegiao', get_regiao(0, int(input('Qual a nova região?\nDigite apenas o código: '))))
         case 8:
+            return altera('CodTier', get_tier(0, int(input('Qual o novo tier?\nDigite apenas o código: '))))
+        case 9:
             print(lista_times())
             return altera('times', get_times(0, input(inputTimes)))
-        case 9:
+        case 10:
             return selecao_inicial('retorno')
         case _:
             print('Valor de alteração inválido!')
@@ -294,9 +296,9 @@ def atualiza_partida(cod_partida, novos_dados):
 def lista_torneios():
     global torneios
     torneios = controller.get_all("torneio", ["*"])
-    return formatacao_dados(["CODIGO", "NOME", "DATA-INICIAL", "DATA-FINAL", "CODIGO-REGIAO", "CODIGO-TIER"], torneios)
+    return formatacao_dados(["CODIGO", "NOME", "DATA-INICIAL", "DATA-FINAL", "CODIGO-REGIAO", "CODIGO-TIER", "CODIGO-ORGANIZADOR"], torneios)
 
-def lista_partidas_torneio(cod_torneio):
+def lista_partidas(cod_torneio):
     condition = f'torneio.codtorneio = {cod_torneio}'
     columns = ["partidas.codpartida", "partidas.data", "torneio.nome", "resultados.resultado", "tv.nome", "tp.nome", "tier.divisao"]
     join_clause = [("torneio", "partidas.codtorneio", "torneio.codtorneio", ""),
