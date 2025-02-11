@@ -79,6 +79,28 @@ def delete(table, condition):
     connection.commit()
     print(f"Dados deletados da tabela {table}")
 
+"""
+Chama uma procedure
+:param procedure: Nome da procedure em string
+:param parametros: Array com os parametros
+"""
+def call(procedure, parametros=None):
+    try:
+        if parametros:
+            placeholders = ', '.join(['%s'] * len(parametros))
+            query = f'CALL {procedure}({placeholders})'
+        else:
+            query = f'CALL {procedure}()'
+        
+        cursor.execute(query, parametros if parametros else ())
+
+        connection.commit()
+        
+        print(f"Procedure {procedure} chamada com sucesso.")
+    except Exception as e:
+        print(f"Erro ao chamar a procedure: {e}")
+
+
 regexData = r"^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$"
 
 if __name__ == "__main__":

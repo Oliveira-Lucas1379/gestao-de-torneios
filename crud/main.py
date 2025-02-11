@@ -153,7 +153,7 @@ def cria_torneio():
         nome = input('\nVamos criar um torneio! Para isso precisamos de algumas informações.\nQual o nome do seu torneio?\nDigite: ')
         
         data_inicial = get_data(0, input('\nEm que data ele começa?\nDigite a data conforme o exemplo (AAAA-MM-DD): '))
-        data_final = get_data(0, input('\nEm que data ele termina?\nDigite a data conforme o exemplo (AAAA-MM-): '))
+        data_final = get_data(0, input('\nEm que data ele termina?\nDigite a data conforme o exemplo (AAAA-MM-DD): '))
 
         print(lista_organizadores())
         organizador = get_organizador(0, int(input('Qual o organizador?\nDigite apenas o código: ')))
@@ -180,7 +180,8 @@ def cria_torneio():
                 controller.insert('torneio_patrocinador', ['codtorneio', 'codpatrocinador'], [(cod_torneio, patrocinador)])
 
         criar_partidas(cod_torneio, times)
-        
+
+        controller.call('VerificarTorneio', (str(cod_torneio)))
     except:
         tentar_novamente(input('Ocorreu um erro ao criar o seu torneio, deseja tentar novamente?\nDigite S/N: '))
         return
