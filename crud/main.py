@@ -298,8 +298,9 @@ def atualiza_partida(cod_partida, novos_dados):
 
 def lista_torneios():
     global torneios
-    torneios = controller.get_all("torneio", ["*"])
-    return formatacao_dados(["CODIGO", "NOME", "DATA-INICIAL", "DATA-FINAL", "CODIGO-REGIAO", "CODIGO-TIER", "CODIGO-ORGANIZADOR"], torneios)
+    torneios = controller.get_all("VisaoGeralTorneios", ["*"])
+    teste = torneios[0]
+    return formatacao_dados(["CODIGO", "NOME", "DATA-INICIAL", "DATA-FINAL", "REGIAO", "TIER", "ORGANIZADOR", "TIMES", "PATROCINADORES", "TECNICOS", "JOGADORES"], torneios)
 
 def lista_partidas(cod_torneio):
     condition = f'torneio.codtorneio = {cod_torneio}'
